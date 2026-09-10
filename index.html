@@ -1,1079 +1,1218 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#F4F4F0">
-<title>KitchenCore OS — Smart Fridge Inventory</title>
-<style>
-:root{
-  --canvas:#F4F4F0;
-  --paper:#FFFFFF;
-  --ink:#111315;
-  --muted:#676B6F;
-  --line:#111315;
-  --orange:#EE592C;
-  --amber:#EFA00C;
-  --teal:#2D6A4F;
-  --cobalt:#0047FF;
-  --soft:#E8E8E2;
-  --radius:3px;
-  --shadow:2px 2px 0 #111315;
-  --sans:Inter,"Arial Narrow","Helvetica Neue",Arial,sans-serif;
-  --mono:"IBM Plex Mono","JetBrains Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
-}
-*{box-sizing:border-box}
-html{background:var(--canvas)}
-body{
-  margin:0;
-  color:var(--ink);
-  background-color:var(--canvas);
-  background-image:
-    linear-gradient(rgba(17,19,21,.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(17,19,21,.018) 1px, transparent 1px);
-  background-size:24px 24px;
-  font-family:var(--sans);
-  min-height:100vh;
-}
-button,input{font:inherit}
-button{color:inherit}
-.app{
-  max-width:1540px;
-  margin:0 auto;
-  padding:18px 18px 92px;
-}
-.masthead{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:18px;
-  align-items:end;
-  border-top:8px solid var(--ink);
-  border-bottom:2px solid var(--ink);
-  padding:18px 0 14px;
-  margin-bottom:16px;
-}
-.brandline{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
-.brand{
-  font:900 clamp(30px,4vw,54px)/.9 var(--sans);
-  letter-spacing:-.055em;
-  text-transform:uppercase;
-}
-.os{
-  font:700 12px/1 var(--mono);
-  letter-spacing:.16em;
-  border:1.5px solid var(--ink);
-  padding:7px 9px 6px;
-  background:var(--paper);
-  box-shadow:var(--shadow);
-}
-.deck{
-  margin-top:10px;
-  font:700 12px/1.4 var(--mono);
-  color:var(--muted);
-  text-transform:uppercase;
-  letter-spacing:.08em;
-}
-.system{
-  display:grid;
-  grid-template-columns:auto auto;
-  gap:4px 16px;
-  min-width:260px;
-  border-left:2px solid var(--ink);
-  padding-left:16px;
-  font:700 11px/1.45 var(--mono);
-  text-transform:uppercase;
-  letter-spacing:.05em;
-}
-.system .label{color:var(--muted)}
-.online{color:var(--teal)}
-.main{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 335px;
-  gap:16px;
-}
-.content{min-width:0}
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  margin-bottom:12px;
-}
-.stat{
-  background:var(--paper);
-  border:1.5px solid var(--ink);
-  border-radius:var(--radius);
-  padding:13px 14px 12px;
-  min-height:110px;
-  box-shadow:var(--shadow);
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-}
-.stat-label{
-  font:800 10px/1.2 var(--sans);
-  letter-spacing:.15em;
-  text-transform:uppercase;
-}
-.stat-value{
-  font:800 36px/.9 var(--mono);
-  letter-spacing:-.05em;
-}
-.stat-meta{
-  color:var(--muted);
-  font:600 10px/1.3 var(--mono);
-}
-.control-strip{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:10px;
-  background:var(--paper);
-  border:1.5px solid var(--ink);
-  box-shadow:var(--shadow);
-  margin-bottom:12px;
-}
-.section-id{
-  display:flex;gap:10px;align-items:center;min-width:0
-}
-.index{
-  font:800 11px/1 var(--mono);
-  border:1.5px solid var(--ink);
-  padding:7px 8px;
-  background:var(--ink);
-  color:white;
-}
-.section-title{
-  font:900 15px/1 var(--sans);
-  text-transform:uppercase;
-  letter-spacing:.06em;
-}
-.section-sub{
-  margin-top:4px;
-  color:var(--muted);
-  font:600 10px/1.25 var(--mono);
-  text-transform:uppercase;
-}
-.actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end}
-.btn{
-  border:1.5px solid var(--ink);
-  border-radius:2px;
-  background:var(--paper);
-  padding:9px 11px 8px;
-  min-height:36px;
-  cursor:pointer;
-  font:900 10px/1 var(--sans);
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  box-shadow:2px 2px 0 var(--ink);
-  transition:transform .06s linear, box-shadow .06s linear, background .1s linear,color .1s linear;
-}
-.btn:hover{background:var(--ink);color:white}
-.btn:active{
-  transform:translate(2px,2px);
-  box-shadow:0 0 0 var(--ink);
-}
-.btn.dark{background:var(--ink);color:#fff}
-.btn.dark:hover{background:#fff;color:var(--ink)}
-.btn.tiny{
-  padding:6px 7px 5px;
-  min-height:27px;
-  font-size:9px;
-  box-shadow:1px 1px 0 var(--ink);
-}
-.btn.active-list{background:var(--ink);color:white}
-.scan-track{
-  height:7px;
-  border:1.5px solid var(--ink);
-  margin:0 0 12px;
-  background:var(--paper);
-  overflow:hidden;
-}
-.scan-progress{
-  height:100%;
-  width:0%;
-  background:var(--ink);
-  transition:width .16s linear;
-}
-.inventory{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-}
-.stock-card{
-  background:var(--paper);
-  border:1.5px solid var(--ink);
-  border-radius:var(--radius);
-  box-shadow:var(--shadow);
-  min-height:194px;
-  display:grid;
-  grid-template-rows:auto 1fr auto;
-  overflow:hidden;
-}
-.stock-card.critical{border-top:7px solid var(--orange)}
-.stock-card.warning{border-top:7px solid var(--amber)}
-.stock-card.good{border-top:7px solid var(--teal)}
-.stock-head{
-  display:grid;
-  grid-template-columns:48px 1fr auto;
-  gap:10px;
-  align-items:center;
-  padding:12px 12px 9px;
-  border-bottom:1.5px solid var(--ink);
-}
-.food-icon{
-  width:46px;height:46px;
-  display:grid;place-items:center;
-  border:1.5px solid var(--ink);
-  background:var(--canvas);
-}
-.food-icon svg{
-  width:27px;height:27px;fill:none;stroke:var(--ink);
-  stroke-width:1.9;stroke-linecap:square;stroke-linejoin:miter;
-}
-.food-name{
-  font:900 17px/1 var(--sans);
-  text-transform:uppercase;
-  letter-spacing:.01em;
-}
-.food-type{
-  color:var(--muted);
-  margin-top:5px;
-  font:700 9px/1 var(--mono);
-  text-transform:uppercase;
-  letter-spacing:.1em;
-}
-.status-chip{
-  align-self:start;
-  padding:6px 7px 5px;
-  border:1.5px solid var(--ink);
-  font:900 9px/1 var(--sans);
-  text-transform:uppercase;
-  letter-spacing:.09em;
-  white-space:nowrap;
-}
-.status-chip.critical{background:var(--orange)}
-.status-chip.warning{background:var(--amber)}
-.status-chip.good{background:var(--teal);color:white}
-.stock-body{
-  display:grid;
-  grid-template-columns:1.1fr .9fr;
-  gap:12px;
-  padding:12px;
-}
-.data-label{
-  font:900 9px/1 var(--sans);
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:var(--muted);
-  margin-bottom:5px;
-}
-.quantity{
-  font:900 33px/.95 var(--mono);
-  letter-spacing:-.06em;
-}
-.quantity small{
-  font-size:12px;
-  letter-spacing:0;
-  color:var(--muted)
-}
-.sensor-number{
-  font:800 22px/1 var(--mono);
-  letter-spacing:-.04em;
-}
-.level-blocks{
-  margin-top:10px;
-  display:flex;gap:4px
-}
-.level-block{
-  height:10px;flex:1;border:1.2px solid var(--ink);background:white
-}
-.level-block.filled.critical{background:var(--orange)}
-.level-block.filled.warning{background:var(--amber)}
-.level-block.filled.good{background:var(--teal)}
-.percent-text{
-  font:800 10px/1 var(--mono);
-  margin-top:6px;
-}
-.stock-foot{
-  display:flex;
-  gap:7px;
-  align-items:center;
-  justify-content:space-between;
-  padding:9px 12px;
-  border-top:1.5px solid var(--ink);
-  background:var(--canvas);
-}
-.threshold{
-  font:700 9px/1.2 var(--mono);
-  color:var(--muted);
-  text-transform:uppercase;
-}
-.adjust{display:flex;gap:5px}
-.receipt{
-  position:sticky;
-  top:14px;
-  align-self:start;
-  background:var(--paper);
-  border:1.5px solid var(--ink);
-  box-shadow:var(--shadow);
-  min-height:590px;
-}
-.receipt::after{
-  content:"";
-  display:block;
-  height:13px;
-  background:
-    radial-gradient(circle at 7px -1px, transparent 7px, var(--paper) 7.5px) 0 0/14px 14px repeat-x;
-  border-top:1.5px dashed var(--ink);
-}
-.receipt-head{
-  padding:15px 15px 11px;
-  border-bottom:1.5px dashed var(--ink);
-  text-align:center;
-}
-.receipt-kicker{
-  font:700 9px/1 var(--mono);
-  letter-spacing:.18em;
-  text-transform:uppercase;
-}
-.receipt-title{
-  margin:6px 0 4px;
-  font:900 23px/.95 var(--mono);
-  text-transform:uppercase;
-}
-.receipt-meta{
-  font:600 9px/1.5 var(--mono);
-  color:var(--muted);
-}
-.receipt-tools{
-  display:flex;gap:7px;
-  padding:10px 12px;
-  border-bottom:1.5px dashed var(--ink);
-}
-.receipt-list{
-  padding:5px 12px 14px;
-  min-height:365px;
-  max-height:520px;
-  overflow:auto;
-}
-.receipt-row{
-  display:grid;
-  grid-template-columns:20px 1fr auto;
-  gap:8px;
-  align-items:start;
-  padding:10px 0;
-  border-bottom:1px dotted #777;
-  font-family:var(--mono);
-}
-.check{
-  width:16px;height:16px;margin:1px 0 0;
-  accent-color:var(--ink);
-}
-.receipt-item{
-  font:800 12px/1.25 var(--mono);
-  text-transform:uppercase;
-}
-.receipt-source{
-  margin-top:4px;
-  font:600 8px/1.25 var(--mono);
-  color:var(--muted);
-  text-transform:uppercase;
-}
-.xbtn{
-  appearance:none;border:0;background:transparent;
-  font:900 14px/1 var(--mono);cursor:pointer;padding:1px 0 0 8px;
-}
-.empty-receipt{
-  padding:42px 5px;
-  text-align:center;
-  color:var(--muted);
-  font:700 10px/1.7 var(--mono);
-  text-transform:uppercase;
-}
-.sensors{
-  margin-top:12px;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:10px;
-}
-.sensor{
-  background:var(--paper);
-  border:1.5px solid var(--ink);
-  box-shadow:var(--shadow);
-  padding:12px;
-  min-height:100px;
-}
-.sensor-top{
-  display:flex;justify-content:space-between;align-items:center;
-  margin-bottom:19px;
-}
-.sensor-icon svg{
-  width:21px;height:21px;fill:none;stroke:var(--ink);
-  stroke-width:2;stroke-linecap:square;stroke-linejoin:miter;
-}
-.sensor-code{
-  font:800 9px/1 var(--mono);
-  color:var(--muted);
-}
-.sensor-name{
-  font:900 10px/1 var(--sans);
-  text-transform:uppercase;
-  letter-spacing:.13em;
-}
-.sensor-state{
-  font:800 13px/1.2 var(--mono);
-  margin-top:6px;
-}
-.log{
-  margin-top:10px;
-  border:1.5px solid var(--ink);
-  background:var(--ink);
-  color:#fff;
-  padding:9px 11px;
-  height:82px;
-  overflow:auto;
-  font:600 9px/1.55 var(--mono);
-}
-.log-line{opacity:.82}
-.voicebar{
-  position:fixed;
-  z-index:50;
-  left:50%;
-  bottom:12px;
-  transform:translateX(-50%);
-  width:min(1100px,calc(100vw - 24px));
-  min-height:60px;
-  display:grid;
-  grid-template-columns:auto 120px 1fr auto;
-  align-items:center;
-  gap:14px;
-  background:var(--paper);
-  border:2px solid var(--ink);
-  box-shadow:4px 4px 0 var(--ink);
-  padding:8px 9px;
-}
-.voicebar.listening{
-  border-color:var(--cobalt);
-  box-shadow:4px 4px 0 var(--cobalt);
-}
-.mic{
-  width:43px;height:43px;border:1.7px solid var(--ink);
-  border-radius:50%;
-  background:var(--paper);
-  box-shadow:2px 2px 0 var(--ink);
-  cursor:pointer;display:grid;place-items:center;
-}
-.mic:hover{background:var(--ink)}
-.mic:hover svg{stroke:white}
-.mic:active{transform:translate(2px,2px);box-shadow:none}
-.mic.listening{
-  background:var(--cobalt);
-  border-color:var(--cobalt);
-  box-shadow:2px 2px 0 var(--cobalt);
-}
-.mic svg{
-  width:21px;height:21px;fill:none;stroke:var(--ink);
-  stroke-width:2;stroke-linecap:square;stroke-linejoin:miter;
-}
-.mic.listening svg{stroke:#fff}
-.wave{
-  height:35px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:4px;
-  border-left:1.5px solid var(--ink);
-  border-right:1.5px solid var(--ink);
-}
-.wave span{
-  width:3px;
-  height:5px;
-  background:var(--ink);
-  transform-origin:center;
-}
-.voicebar.listening .wave span{
-  background:var(--cobalt);
-  animation:wave .72s ease-in-out infinite alternate;
-}
-.voicebar.listening .wave span:nth-child(2){animation-delay:.08s}
-.voicebar.listening .wave span:nth-child(3){animation-delay:.16s}
-.voicebar.listening .wave span:nth-child(4){animation-delay:.24s}
-.voicebar.listening .wave span:nth-child(5){animation-delay:.32s}
-.voicebar.listening .wave span:nth-child(6){animation-delay:.40s}
-.voicebar.listening .wave span:nth-child(7){animation-delay:.48s}
-@keyframes wave{
-  from{height:5px}
-  to{height:28px}
-}
-.voice-copy{min-width:0}
-.voice-label{
-  font:900 9px/1 var(--sans);
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  margin-bottom:4px;
-}
-.voicebar.listening .voice-label{color:var(--cobalt)}
-.voice-text{
-  font:700 11px/1.35 var(--mono);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.command{
-  display:flex;gap:6px;align-items:center
-}
-.command input{
-  width:220px;
-  height:36px;
-  border:1.5px solid var(--ink);
-  border-radius:2px;
-  background:var(--canvas);
-  color:var(--ink);
-  outline:0;
-  padding:0 9px;
-  font:700 10px/1 var(--mono);
-}
-.command input:focus{border-width:2px}
-.voice-help{
-  margin:10px 0 0;
-  font:600 9px/1.45 var(--mono);
-  color:var(--muted);
-}
-@media(max-width:1100px){
-  .main{grid-template-columns:1fr}
-  .receipt{position:relative;top:auto;min-height:auto}
-  .receipt-list{min-height:160px;max-height:300px}
-}
-@media(max-width:820px){
-  .stats{grid-template-columns:repeat(2,1fr)}
-  .inventory{grid-template-columns:1fr}
-  .masthead{grid-template-columns:1fr}
-  .system{border-left:0;border-top:1.5px solid var(--ink);padding:10px 0 0}
-  .voicebar{grid-template-columns:auto 80px 1fr}
-  .command{grid-column:1/-1}
-  .command input{flex:1;width:auto}
-}
-@media(max-width:560px){
-  .app{padding:10px 10px 150px}
-  .brand{font-size:35px}
-  .stats{grid-template-columns:1fr 1fr}
-  .stat-value{font-size:30px}
-  .control-strip{align-items:flex-start;flex-direction:column}
-  .actions{justify-content:flex-start}
-  .stock-body{grid-template-columns:1fr 1fr}
-  .sensors{grid-template-columns:1fr}
-  .voicebar{bottom:8px;grid-template-columns:auto 1fr}
-  .wave{display:none}
-  .command{grid-column:1/-1}
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KitchenCore — App Moderno</title>
+  <style>
+    :root{
+      --bg:#F7F5EF;
+      --card:#FFFFFF;
+      --text:#151823;
+      --muted:#6B7385;
+      --line:#EAE7DE;
+      --accent:#FF6A1A;
+      --teal:#2BC4B1;
+      --green:#3ECF8E;
+      --green-soft:#DDF8EA;
+      --yellow:#F5B84E;
+      --yellow-soft:#FFF2D8;
+      --red:#FF6D6D;
+      --red-soft:#FFE4E4;
+      --blue:#5B9DFF;
+      --blue-soft:#E8F1FF;
+      --purple:#8C74FF;
+      --purple-soft:#EEE9FF;
+      --mint:#EAF9F5;
+      --shadow:0 8px 30px rgba(23,31,56,.08);
+      --radius-xl:26px;
+      --radius-lg:20px;
+      --radius-md:16px;
+      --radius-sm:12px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:linear-gradient(180deg, #f8f6f0 0%, #f2efe8 100%);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+
+    .phone{
+      width:390px;
+      max-width:100%;
+      height:844px;
+      background:var(--bg);
+      border:10px solid #151515;
+      border-radius:38px;
+      overflow:hidden;
+      position:relative;
+      box-shadow:0 25px 80px rgba(0,0,0,.22);
+    }
+
+    .notch{
+      position:absolute;
+      top:10px; left:50%;
+      transform:translateX(-50%);
+      width:170px; height:28px;
+      border-radius:18px;
+      background:#111;
+      z-index:5;
+    }
+
+    .statusbar{
+      position:absolute;
+      top:18px; left:0; right:0;
+      padding:0 18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:12px;
+      font-weight:700;
+      z-index:4;
+    }
+
+    .app{
+      height:100%;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .content{
+      flex:1;
+      overflow:auto;
+      padding:54px 16px 100px;
+      scrollbar-width:none;
+    }
+    .content::-webkit-scrollbar{display:none}
+
+    .screen{display:none}
+    .screen.active{display:block}
+
+    .header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:18px;
+    }
+    .title{
+      font-size:28px;
+      font-weight:800;
+      line-height:1.05;
+      letter-spacing:-.03em;
+      margin:0;
+    }
+    .subtitle{
+      color:var(--muted);
+      margin-top:4px;
+      font-size:13px;
+      font-weight:500;
+    }
+
+    .icon-btn{
+      border:none;
+      width:42px; height:42px;
+      border-radius:50%;
+      background:var(--card);
+      box-shadow:var(--shadow);
+      display:grid; place-items:center;
+      color:var(--text);
+      cursor:pointer;
+    }
+
+    .card{
+      background:var(--card);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow);
+      padding:16px;
+      margin-bottom:14px;
+    }
+
+    .device-card{
+      display:grid;
+      grid-template-columns:92px 1fr auto;
+      gap:14px;
+      align-items:center;
+    }
+
+    .fridge-illu{
+      width:92px; height:104px;
+      border-radius:18px;
+      background:linear-gradient(180deg,#fbfbfb 0%, #dfe5ec 100%);
+      position:relative;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.9), inset 0 -8px 16px rgba(80,90,110,.12);
+    }
+    .fridge-illu:before{
+      content:"";
+      position:absolute;
+      left:50%;
+      top:0; bottom:0;
+      width:2px;
+      background:#cad2dc;
+      transform:translateX(-50%);
+    }
+    .fridge-illu:after{
+      content:"";
+      position:absolute;
+      right:16px; top:18px;
+      width:4px; height:44px;
+      border-radius:10px;
+      background:#57606f;
+      box-shadow:0 54px 0 #57606f;
+    }
+    .device-name{font-size:17px;font-weight:800}
+    .device-status{display:flex;align-items:center;gap:8px;margin-top:6px;color:#18A866;font-weight:600}
+    .dot{width:10px;height:10px;border-radius:50%;background:#19c37d}
+    .temp-row{display:flex;align-items:center;gap:10px;margin-top:12px}
+    .temp-main{font-size:18px;font-weight:800}
+    .temp-sub{font-size:12px;color:var(--muted)}
+    .pill{
+      padding:10px 14px;
+      border-radius:999px;
+      font-size:14px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+    .pill.green{background:var(--green-soft); color:#17945F}
+    .pill.yellow{background:var(--yellow-soft); color:#C8820C}
+    .pill.red{background:var(--red-soft); color:#D44A4A}
+    .pill.blue{background:#E4F7F4;color:#159A8A}
+
+    .row-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:10px;
+    }
+    .section-title{
+      font-size:16px;
+      font-weight:800;
+      margin:0;
+    }
+    .section-sub{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:2px;
+    }
+    .link{
+      color:#76819a;
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .stock-summary{
+      display:grid;
+      grid-template-columns:190px 1fr;
+      gap:10px;
+      align-items:center;
+    }
+
+    .gauge-wrap{
+      position:relative;
+      width:150px;height:150px;
+      margin:6px auto;
+    }
+    .gauge{
+      width:150px;height:150px;border-radius:50%;
+      background:conic-gradient(
+        var(--teal) 0 110deg,
+        #ff823e 110deg 185deg,
+        #F7C247 185deg 265deg,
+        #4C98FF 265deg 330deg,
+        #EDEAF4 330deg 360deg
+      );
+      -webkit-mask:radial-gradient(circle at center, transparent 0 54px, #000 56px);
+              mask:radial-gradient(circle at center, transparent 0 54px, #000 56px);
+    }
+    .gauge-center{
+      position:absolute; inset:0;
+      display:grid; place-items:center;
+      text-align:center;
+    }
+    .gauge-number{
+      font-size:28px;font-weight:800;line-height:1;
+    }
+    .gauge-label{
+      font-size:12px;color:var(--muted);font-weight:600;
+    }
+
+    .legend{display:grid;gap:12px}
+    .legend-item{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      font-size:14px;font-weight:600;
+    }
+    .legend-left{display:flex;align-items:center;gap:10px}
+    .bullet{width:12px;height:12px;border-radius:50%}
+    .b1{background:var(--teal)}
+    .b2{background:#ff823e}
+    .b3{background:#F7C247}
+    .b4{background:#18BA68}
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .mini-card{
+      border-radius:20px;
+      padding:14px;
+      min-height:128px;
+      position:relative;
+      background:#fff;
+      box-shadow:var(--shadow);
+    }
+    .mini-card.blue{background:#EEF6FF}
+    .mini-card.orange{background:#FFF3E6}
+    .mini-card.pink{background:#FFEDED}
+    .mini-card.green{background:#E8F8EF}
+    .mini-icon{
+      width:54px;height:54px;border-radius:16px;
+      display:grid;place-items:center;
+      background:rgba(255,255,255,.65);
+      font-size:31px;
+    }
+    .mini-title{font-size:15px;font-weight:800;margin-top:10px}
+    .mini-sub{color:#586176;font-size:13px;margin-top:2px}
+    .progress{
+      margin-top:10px;
+      height:6px;border-radius:999px;background:rgba(0,0,0,.08);
+      overflow:hidden;
+    }
+    .progress > span{
+      display:block;height:100%;border-radius:999px;
+    }
+    .status-tag{
+      margin-top:10px;
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:13px;font-weight:700;
+    }
+    .status-tag.green{background:var(--green-soft);color:#16915d}
+    .status-tag.yellow{background:var(--yellow-soft);color:#c98309}
+    .status-tag.red{background:var(--red-soft);color:#e34b4b}
+
+    .tip{
+      display:flex;align-items:center;gap:12px;
+      padding:14px 16px;
+    }
+    .tip-badge{
+      width:34px;height:34px;border-radius:50%;
+      background:#FFF1CB;
+      display:grid;place-items:center;
+      color:#D08D07;
+      font-size:18px;
+      flex:none;
+    }
+    .tip h4{margin:0;font-size:15px}
+    .tip p{margin:2px 0 0;color:var(--muted);font-size:13px}
+
+    .voice-card{
+      padding:16px;
+      background:#EFFAF7;
+    }
+    .voice-flex{
+      display:grid;grid-template-columns:148px 1fr;gap:16px;align-items:center;
+    }
+    .mic-wrap{
+      width:132px;height:132px;border-radius:50%;
+      margin:auto;
+      display:grid;place-items:center;
+      background:radial-gradient(circle at center, #2BC4B1 0 42%, #ccefeb 43% 55%, #def6f2 56% 100%);
+      cursor:pointer;
+      position:relative;
+    }
+    .mic-wrap.listening{animation:pulse 1.5s infinite}
+    @keyframes pulse{
+      0%{transform:scale(1)}
+      50%{transform:scale(1.03)}
+      100%{transform:scale(1)}
+    }
+    .mic-center{
+      width:84px;height:84px;border-radius:50%;
+      background:linear-gradient(180deg,#32d0be,#20b6a4);
+      color:white;
+      display:grid;place-items:center;
+      font-size:34px;
+      box-shadow:0 12px 26px rgba(43,196,177,.35);
+    }
+    .voice-title{font-size:15px;font-weight:800}
+    .quote{
+      margin-top:8px;
+      font-size:15px;
+      font-weight:700;
+      line-height:1.35;
+    }
+    .wave{
+      margin-top:14px;
+      display:flex;gap:5px;align-items:flex-end;height:28px;
+    }
+    .wave span{
+      width:4px;border-radius:99px;
+      background:#78D9CD;height:8px;
+    }
+    .mic-wrap.listening ~ .voice-side .wave span{
+      animation:waves .8s ease-in-out infinite alternate;
+    }
+    .mic-wrap.listening ~ .voice-side .wave span:nth-child(2){animation-delay:.08s}
+    .mic-wrap.listening ~ .voice-side .wave span:nth-child(3){animation-delay:.16s}
+    .mic-wrap.listening ~ .voice-side .wave span:nth-child(4){animation-delay:.24s}
+    .mic-wrap.listening ~ .voice-side .wave span:nth-child(5){animation-delay:.32s}
+    .mic-wrap.listening ~ .voice-side .wave span:nth-child(6){animation-delay:.40s}
+    @keyframes waves{
+      from{height:6px}
+      to{height:26px}
+    }
+
+    .last-command,.auto-list,.shopping-card{padding:14px 16px}
+    .last-command-row{
+      display:grid;grid-template-columns:auto 1fr auto;
+      gap:12px;align-items:center;
+    }
+    .round-ico{
+      width:40px;height:40px;border-radius:50%;
+      display:grid;place-items:center;
+      background:#D8F5EF;color:#1AA793;font-size:18px;
+    }
+    .command-title{font-weight:700;font-size:14px;line-height:1.35}
+    .command-time{font-size:12px;color:var(--muted);margin-top:3px}
+    .check-pill{
+      background:#E2F8EC;color:#17935D;border-radius:999px;padding:10px 14px;
+      font-size:13px;font-weight:700;
+    }
+
+    .auto-items{display:grid;gap:10px;margin-top:10px}
+    .auto-item{
+      display:grid;grid-template-columns:auto 1fr auto auto;
+      align-items:center;gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:#FFF5F5;
+    }
+    .auto-emoji{font-size:24px}
+    .auto-name{font-weight:700}
+    .auto-status{font-size:13px}
+    .auto-status.red{color:#EC5454}
+    .auto-status.yellow{color:#DA9514}
+    .plus-btn{
+      border:none;width:30px;height:30px;border-radius:50%;
+      background:#fff;color:#ff6a1a;font-size:24px;line-height:1;
+      box-shadow:var(--shadow); cursor:pointer;
+    }
+
+    .shopping-list{margin-top:8px;display:grid;gap:2px}
+    .shop-row{
+      display:grid;
+      grid-template-columns:auto 1fr auto auto;
+      align-items:center;
+      gap:10px;
+      padding:12px 0;
+      border-bottom:1px solid #EFEAE1;
+    }
+    .shop-row:last-child{border-bottom:none}
+    .circle-check{
+      width:24px;height:24px;border:2px solid #B8C0D2;border-radius:50%;
+      display:grid;place-items:center;cursor:pointer;
+      color:white;
+      font-size:12px;
+    }
+    .circle-check.done{background:#4ECF92;border-color:#4ECF92}
+    .shop-name{font-size:15px;font-weight:600}
+    .shop-meta{font-size:13px;color:var(--muted)}
+    .dots{color:#aab1c0;font-size:20px}
+
+    .action-grid{
+      display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;
+    }
+    .action-card{
+      border-radius:18px;padding:16px;
+      display:flex;gap:12px;align-items:flex-start;
+    }
+    .action-card.blue{background:#E8F1FF}
+    .action-card.purple{background:#EFEAFF}
+    .action-icon{
+      width:42px;height:42px;border-radius:14px;
+      background:rgba(255,255,255,.65);display:grid;place-items:center;font-size:20px;
+    }
+    .action-title{font-size:14px;font-weight:800}
+    .action-sub{font-size:12px;color:#677186;margin-top:4px}
+
+    .inventory-list{display:grid;gap:10px}
+    .inv-row{
+      display:grid;
+      grid-template-columns:auto 1fr auto;
+      gap:12px;align-items:center;
+      background:#fff;
+      border-radius:18px;
+      padding:12px;
+      box-shadow:var(--shadow);
+    }
+    .inv-icon{
+      width:54px;height:54px;border-radius:16px;background:#F3F6FB;
+      display:grid;place-items:center;font-size:28px;
+    }
+    .inv-title{font-weight:800;font-size:15px}
+    .inv-sub{font-size:13px;color:var(--muted);margin-top:4px}
+    .inv-controls{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+    .pm{display:flex;gap:8px}
+    .pm button{
+      border:none;width:32px;height:32px;border-radius:12px;
+      background:#F4F6FA;color:#1e2432;font-size:18px;font-weight:700;cursor:pointer;
+    }
+    .small-tag{
+      font-size:12px;font-weight:700;border-radius:999px;padding:7px 10px;
+    }
+
+    .search{
+      width:100%;border:none;background:white;box-shadow:var(--shadow);
+      border-radius:16px;padding:14px 16px;font-size:14px;color:var(--text);
+      margin-bottom:14px;
+    }
+
+    .placeholder{
+      background:white;border-radius:22px;padding:18px;box-shadow:var(--shadow);
+      text-align:center;color:var(--muted);
+    }
+    .placeholder .big{font-size:52px;margin-bottom:10px}
+    .placeholder h3{margin:6px 0;color:var(--text)}
+    .placeholder p{margin:0;line-height:1.5}
+
+    .manual-bar{
+      margin-top:12px;
+      display:flex;gap:8px;
+    }
+    .manual-bar input{
+      flex:1;border:none;background:white;border-radius:14px;padding:13px 14px;
+      font-size:14px;box-shadow:var(--shadow); outline:none;
+    }
+    .manual-bar button{
+      border:none;background:var(--accent);color:white;border-radius:14px;
+      padding:0 16px;font-weight:700;box-shadow:var(--shadow);cursor:pointer;
+    }
+
+    .bottom-nav{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      padding:12px 12px 20px;
+      background:rgba(255,255,255,.94);
+      backdrop-filter:blur(16px);
+      border-top:1px solid rgba(0,0,0,.05);
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:4px;
+    }
+    .nav-item{
+      border:none;background:transparent;cursor:pointer;
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+      color:#8490a3;padding:6px 0;
+      font-size:11px;font-weight:600;
+    }
+    .nav-icon{font-size:20px;line-height:1}
+    .nav-item.active{color:var(--accent)}
+
+    .top-actions{
+      display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px;
+    }
+    .soft-btn{
+      border:none;background:white;color:#2a3140;border-radius:14px;
+      padding:10px 14px;font-weight:700;box-shadow:var(--shadow);cursor:pointer;
+    }
+
+    @media (max-width:420px){
+      body{padding:0}
+      .phone{width:100vw;height:100vh;border-radius:0;border:none}
+      .notch{display:none}
+      .statusbar{top:10px}
+      .content{padding-top:42px}
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-  <header class="masthead">
-    <div>
-      <div class="brandline">
-        <div class="brand">KitchenCore</div>
-        <div class="os">OS / 01</div>
-      </div>
-      <div class="deck">Smart Fridge Inventory Management · sensor layer / local dashboard / voice input</div>
+  <div class="phone">
+    <div class="notch"></div>
+    <div class="statusbar">
+      <span>9:41</span>
+      <span>📶  📡  🔋</span>
     </div>
-    <div class="system">
-      <div class="label">Estado</div><div class="online">● Online</div>
-      <div class="label">Gateway</div><div>KC-GW-01</div>
-      <div class="label">Link</div><div>Wi-Fi / Local</div>
-      <div class="label">Última leitura</div><div id="lastRead">--:--:--</div>
+
+    <div class="app">
+      <main class="content">
+        <!-- HOME -->
+        <section class="screen active" id="screen-home">
+          <div class="header">
+            <div>
+              <h1 class="title">KitchenCore</h1>
+              <div class="subtitle">Sua geladeira em tempo real</div>
+            </div>
+            <button class="icon-btn" onclick="addQuickItem()">＋</button>
+          </div>
+
+          <div class="card device-card">
+            <div class="fridge-illu"></div>
+            <div>
+              <div class="device-name">Geladeira Inteligente</div>
+              <div class="device-status"><span class="dot"></span> Conectada</div>
+              <div class="temp-row">
+                <div>
+                  <div class="temp-main">4°C</div>
+                  <div class="temp-sub">Temperatura ideal</div>
+                </div>
+              </div>
+            </div>
+            <div class="pill green">Tudo certo</div>
+          </div>
+
+          <div class="card">
+            <div class="row-head">
+              <div>
+                <h3 class="section-title">Seu estoque</h3>
+                <div class="section-sub"><span id="homeTotalItems">0</span> itens no total</div>
+              </div>
+              <div class="link" onclick="goTo('estoque')">Ver todos ›</div>
+            </div>
+            <div class="stock-summary">
+              <div class="gauge-wrap">
+                <div class="gauge"></div>
+                <div class="gauge-center">
+                  <div>
+                    <div class="gauge-number" id="gaugeCount">0</div>
+                    <div class="gauge-label">itens</div>
+                  </div>
+                </div>
+              </div>
+              <div class="legend">
+                <div class="legend-item"><div class="legend-left"><span class="bullet b1"></span> Laticínios</div><strong id="countLaticinios">0</strong></div>
+                <div class="legend-item"><div class="legend-left"><span class="bullet b2"></span> Proteínas</div><strong id="countProteinas">0</strong></div>
+                <div class="legend-item"><div class="legend-left"><span class="bullet b3"></span> Frutas</div><strong id="countFrutas">0</strong></div>
+                <div class="legend-item"><div class="legend-left"><span class="bullet b4"></span> Verduras</div><strong id="countVerduras">0</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row-head" style="margin-top:8px">
+            <div>
+              <h3 class="section-title">Categorias principais</h3>
+            </div>
+          </div>
+
+          <div class="grid-2" id="homeCategories"></div>
+
+          <div class="card tip">
+            <div class="tip-badge">💡</div>
+            <div>
+              <h4>Dica do dia</h4>
+              <p id="tipText">Seus itens estão sendo monitorados em tempo real.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- STOCK -->
+        <section class="screen" id="screen-estoque">
+          <div class="header">
+            <div>
+              <h1 class="title">Estoque</h1>
+              <div class="subtitle">Controle todos os produtos da geladeira</div>
+            </div>
+            <button class="icon-btn" onclick="scanFridge()">🔎</button>
+          </div>
+
+          <div class="top-actions">
+            <button class="soft-btn" onclick="scanFridge()">Escanear</button>
+            <button class="soft-btn" onclick="simulateConsumption()">Simular consumo</button>
+            <button class="soft-btn" onclick="simulateRestock()">Repor</button>
+            <button class="soft-btn" onclick="resetAll()">Reset</button>
+          </div>
+
+          <input class="search" id="searchInput" placeholder="Buscar produto..." oninput="renderInventory()">
+
+          <div class="inventory-list" id="inventoryList"></div>
+        </section>
+
+        <!-- SHOPPING -->
+        <section class="screen" id="screen-compras">
+          <div class="header">
+            <div>
+              <h1 class="title">Compras</h1>
+              <div class="subtitle">Organize sua lista com praticidade</div>
+            </div>
+            <button class="icon-btn" onclick="addQuickItem()">＋</button>
+          </div>
+
+          <div class="card voice-card">
+            <div class="voice-flex">
+              <div class="mic-wrap" id="micBtn">
+                <div class="mic-center">🎤</div>
+              </div>
+              <div class="voice-side">
+                <div class="voice-title">Fale com a KitchenCore</div>
+                <div class="quote" id="voiceMessage">“Adicionar leite à lista”</div>
+                <div class="wave">
+                  <span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+
+            <div class="manual-bar">
+              <input id="manualCommand" placeholder="Digite um comando..." />
+              <button onclick="sendManualCommand()">Executar</button>
+            </div>
+          </div>
+
+          <div class="card last-command">
+            <div class="last-command-row">
+              <div class="round-ico">🎙️</div>
+              <div>
+                <div class="command-title" id="lastCommandText">Aguardando comando...</div>
+                <div class="command-time" id="lastCommandTime">Agora mesmo</div>
+              </div>
+              <div class="check-pill" id="commandStatusPill">Pronto</div>
+            </div>
+          </div>
+
+          <div class="card auto-list">
+            <div class="row-head">
+              <div>
+                <h3 class="section-title">Adicionados automaticamente</h3>
+                <div class="section-sub">Com base no seu estoque</div>
+              </div>
+            </div>
+            <div class="auto-items" id="autoItems"></div>
+          </div>
+
+          <div class="card shopping-card">
+            <div class="row-head">
+              <div>
+                <h3 class="section-title">Sua lista de compras</h3>
+              </div>
+              <div class="section-sub"><span id="listCount">0</span> itens</div>
+            </div>
+
+            <div class="shopping-list" id="shoppingList"></div>
+
+            <div class="action-grid">
+              <div class="action-card blue">
+                <div class="action-icon">🛒</div>
+                <div>
+                  <div class="action-title">Sugestões para você</div>
+                  <div class="action-sub">Baseadas no seu consumo</div>
+                </div>
+              </div>
+              <div class="action-card purple">
+                <div class="action-icon">🍲</div>
+                <div>
+                  <div class="action-title">Ver receitas</div>
+                  <div class="action-sub">Com os itens da lista</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- RECIPES -->
+        <section class="screen" id="screen-receitas">
+          <div class="header">
+            <div>
+              <h1 class="title">Receitas</h1>
+              <div class="subtitle">Sugestões com os ingredientes disponíveis</div>
+            </div>
+          </div>
+
+          <div class="placeholder">
+            <div class="big">🍳</div>
+            <h3>Receitas inteligentes</h3>
+            <p>
+              Esta área pode sugerir receitas com base nos produtos existentes na geladeira
+              e na lista de compras do usuário.
+            </p>
+          </div>
+        </section>
+
+        <!-- MORE -->
+        <section class="screen" id="screen-mais">
+          <div class="header">
+            <div>
+              <h1 class="title">Mais</h1>
+              <div class="subtitle">Configurações e informações do sistema</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title">Sobre o projeto</h3>
+            <div class="section-sub" style="margin-top:8px; line-height:1.6">
+              O KitchenCore é um protótipo IoT de geladeira inteligente com sensores simulados,
+              lista de compras automática e comandos de voz.
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 class="section-title">Autores</h3>
+            <div class="section-sub" style="margin-top:8px; line-height:1.8">
+              Eduarda Fernandes Pires<br>
+              Igor Samuel Candido de Souza
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav">
+        <button class="nav-item active" data-screen="home" onclick="goTo('home', this)">
+          <span class="nav-icon">🏠</span><span>Início</span>
+        </button>
+        <button class="nav-item" data-screen="estoque" onclick="goTo('estoque', this)">
+          <span class="nav-icon">📦</span><span>Estoque</span>
+        </button>
+        <button class="nav-item" data-screen="compras" onclick="goTo('compras', this)">
+          <span class="nav-icon">🛒</span><span>Compras</span>
+        </button>
+        <button class="nav-item" data-screen="receitas" onclick="goTo('receitas', this)">
+          <span class="nav-icon">👨‍🍳</span><span>Receitas</span>
+        </button>
+        <button class="nav-item" data-screen="mais" onclick="goTo('mais', this)">
+          <span class="nav-icon">⋯</span><span>Mais</span>
+        </button>
+      </nav>
     </div>
-  </header>
+  </div>
 
-  <div class="main">
-    <section class="content">
-      <div class="stats">
-        <article class="stat">
-          <div class="stat-label">Itens detectados</div>
-          <div class="stat-value" id="statDetected">00</div>
-          <div class="stat-meta">sensor / visão computacional</div>
-        </article>
-        <article class="stat">
-          <div class="stat-label">Estoque crítico</div>
-          <div class="stat-value" id="statCritical">00</div>
-          <div class="stat-meta">prioridade de reposição</div>
-        </article>
-        <article class="stat">
-          <div class="stat-label">Estoque baixo</div>
-          <div class="stat-value" id="statWarning">00</div>
-          <div class="stat-meta">abaixo do nível ideal</div>
-        </article>
-        <article class="stat">
-          <div class="stat-label">Lista ativa</div>
-          <div class="stat-value" id="statList">00</div>
-          <div class="stat-meta">itens ainda não comprados</div>
-        </article>
-      </div>
+  <script>
+    const defaults = [
+      { id:1, name:"Leite", category:"Laticínios", emoji:"🥛", qty:3, ideal:5, min:2, unit:"unidades", shoppingQty:"2 unidades" },
+      { id:2, name:"Ovos", category:"Proteínas", emoji:"🥚", qty:2, ideal:12, min:3, unit:"unidades", shoppingQty:"1 cartela" },
+      { id:3, name:"Maçã", category:"Frutas", emoji:"🍎", qty:0, ideal:6, min:2, unit:"itens", shoppingQty:"6 unidades" },
+      { id:4, name:"Verduras", category:"Verduras", emoji:"🍃", qty:5, ideal:6, min:2, unit:"itens", shoppingQty:"1 maço" },
+      { id:5, name:"Tomate", category:"Verduras", emoji:"🍅", qty:1, ideal:4, min:2, unit:"unidades", shoppingQty:"4 unidades" },
+      { id:6, name:"Iogurte", category:"Laticínios", emoji:"🥣", qty:0, ideal:4, min:1, unit:"unidades", shoppingQty:"4 unidades" },
+      { id:7, name:"Queijo", category:"Laticínios", emoji:"🧀", qty:2, ideal:3, min:1, unit:"unidades", shoppingQty:"1 peça" },
+      { id:8, name:"Frango", category:"Proteínas", emoji:"🍗", qty:1, ideal:3, min:1, unit:"bandejas", shoppingQty:"2 bandejas" }
+    ];
 
-      <div class="control-strip">
-        <div class="section-id">
-          <span class="index">01</span>
+    let items = JSON.parse(localStorage.getItem("kc_modern_items") || "null") || structuredClone(defaults);
+    let shopping = JSON.parse(localStorage.getItem("kc_modern_shopping") || "null") || [
+      { id: "s1", name: "Leite", qty: "2 unidades", checked: false, source: "manual" },
+      { id: "s2", name: "Pão Integral", qty: "1 pacote", checked: false, source: "manual" },
+      { id: "s3", name: "Tomate", qty: "4 unidades", checked: false, source: "auto" }
+    ];
+    let lastCommand = { text: "Aguardando comando...", time: "Agora mesmo", ok: true };
+
+    const $ = s => document.querySelector(s);
+
+    function saveState(){
+      localStorage.setItem("kc_modern_items", JSON.stringify(items));
+      localStorage.setItem("kc_modern_shopping", JSON.stringify(shopping));
+    }
+
+    function statusOf(item){
+      if(item.qty <= 0) return "acabou";
+      if(item.qty <= item.min) return "acabando";
+      return "suficiente";
+    }
+
+    function percentOf(item){
+      return Math.max(0, Math.min(100, Math.round((item.qty / item.ideal) * 100)));
+    }
+
+    function addAutoItems(){
+      items.forEach(item => {
+        if((statusOf(item) === "acabou" || statusOf(item) === "acabando") && !shopping.some(s => normalize(s.name) === normalize(item.name))){
+          shopping.push({
+            id: "s" + Date.now() + Math.random(),
+            name: item.name,
+            qty: item.shoppingQty || "1 unidade",
+            checked: false,
+            source: "auto"
+          });
+        }
+      });
+    }
+
+    function normalize(t){
+      return t.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[.,!?]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+    function renderHome(){
+      const total = items.reduce((acc, item) => acc + item.qty, 0);
+      $("#homeTotalItems").textContent = total;
+      $("#gaugeCount").textContent = total;
+
+      const counts = {
+        "Laticínios":0, "Proteínas":0, "Frutas":0, "Verduras":0
+      };
+      items.forEach(i => counts[i.category] = (counts[i.category] || 0) + i.qty);
+
+      $("#countLaticinios").textContent = counts["Laticínios"] || 0;
+      $("#countProteinas").textContent = counts["Proteínas"] || 0;
+      $("#countFrutas").textContent = counts["Frutas"] || 0;
+      $("#countVerduras").textContent = counts["Verduras"] || 0;
+
+      const featured = [
+        items.find(i => i.name === "Leite") || items[0],
+        items.find(i => i.name === "Ovos") || items[1],
+        { name:"Frutas", emoji:"🍎", qty: counts["Frutas"] || 0, ideal: 8, min:2, category:"Frutas" },
+        { name:"Verduras", emoji:"🍃", qty: counts["Verduras"] || 0, ideal: 8, min:2, category:"Verduras" }
+      ];
+
+      $("#homeCategories").innerHTML = featured.map((item, idx) => {
+        const status = statusOf(item);
+        const p = percentOf(item);
+        const themeClass = idx === 0 ? "blue" : idx === 1 ? "orange" : idx === 2 ? "pink" : "green";
+
+        return `
+          <div class="mini-card ${themeClass}">
+            <div class="mini-icon">${item.emoji}</div>
+            <div class="mini-title">${item.name}</div>
+            <div class="mini-sub">${item.qty} ${item.unit || "itens"}</div>
+            <div class="progress"><span style="width:${p}%; background:${status === "suficiente" ? "#31C58C" : status === "acabando" ? "#F1A227" : "#F05C5C"}"></span></div>
+            <div class="status-tag ${status === "suficiente" ? "green" : status === "acabando" ? "yellow" : "red"}">
+              ${status === "suficiente" ? "Suficiente" : status === "acabando" ? "Acabando" : "Acabou"}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const criticals = items.filter(i => statusOf(i) !== "suficiente");
+      $("#tipText").textContent = criticals.length
+        ? `Você tem ${criticals.length} item(ns) precisando de atenção.`
+        : "Todos os itens principais estão em situação estável.";
+    }
+
+    function renderAutoItems(){
+      const auto = items.filter(item => statusOf(item) !== "suficiente").slice(0, 4);
+      $("#autoItems").innerHTML = auto.length ? auto.map(item => {
+        const status = statusOf(item);
+        return `
+          <div class="auto-item">
+            <div class="auto-emoji">${item.emoji}</div>
+            <div class="auto-name">${item.name}</div>
+            <div class="auto-status ${status === "acabou" ? "red" : "yellow"}">
+              ${status === "acabou" ? "Estoque esgotado" : "Estoque baixo"}
+            </div>
+            <button class="plus-btn" onclick="forceAddToShopping('${item.name}')">+</button>
+          </div>
+        `;
+      }).join("") : `<div class="section-sub">Nenhum item crítico no momento.</div>`;
+    }
+
+    function renderShopping(){
+      addAutoItems();
+      $("#listCount").textContent = shopping.length;
+      $("#shoppingList").innerHTML = shopping.map(item => `
+        <div class="shop-row">
+          <div class="circle-check ${item.checked ? 'done' : ''}" onclick="toggleShop('${item.id}')">${item.checked ? '✓' : ''}</div>
           <div>
-            <div class="section-title">Inventário refrigerado</div>
-            <div class="section-sub">Ordenação automática: crítico → baixo → suficiente</div>
+            <div class="shop-name" style="${item.checked ? 'text-decoration:line-through; opacity:.55' : ''}">${item.name}</div>
+            <div class="shop-meta">${item.qty}</div>
           </div>
+          <div class="shop-meta">${item.source === 'auto' ? 'Auto' : 'Manual'}</div>
+          <div class="dots" onclick="removeShop('${item.id}')">⋮</div>
         </div>
-        <div class="actions">
-          <button class="btn" id="scanBtn">Escanear</button>
-          <button class="btn" id="consumeBtn">Simular consumo</button>
-          <button class="btn" id="restockBtn">Simular reposição</button>
-          <button class="btn" id="resetBtn">Reset</button>
-        </div>
-      </div>
+      `).join("");
+    }
 
-      <div class="scan-track" aria-label="Progresso de escaneamento"><div class="scan-progress" id="scanProgress"></div></div>
-      <div class="inventory" id="inventory"></div>
+    function renderInventory(){
+      const filter = normalize($("#searchInput") ? $("#searchInput").value : "");
+      const view = items.filter(item => normalize(item.name).includes(filter));
 
-      <div class="control-strip" style="margin-top:12px;margin-bottom:10px">
-        <div class="section-id">
-          <span class="index">02</span>
-          <div>
-            <div class="section-title">Camada de sensores</div>
-            <div class="section-sub">Simulação de sinais físicos da geladeira</div>
+      $("#inventoryList").innerHTML = view.map(item => {
+        const status = statusOf(item);
+        return `
+          <div class="inv-row">
+            <div class="inv-icon">${item.emoji}</div>
+            <div>
+              <div class="inv-title">${item.name}</div>
+              <div class="inv-sub">${item.qty} ${item.unit} • ideal ${item.ideal}</div>
+              <div class="progress"><span style="width:${percentOf(item)}%; background:${status === "suficiente" ? "#31C58C" : status === "acabando" ? "#F1A227" : "#F05C5C"}"></span></div>
+            </div>
+            <div class="inv-controls">
+              <div class="small-tag ${status === "suficiente" ? "pill green" : status === "acabando" ? "pill yellow" : "pill red"}">
+                ${status === "suficiente" ? "Suficiente" : status === "acabando" ? "Acabando" : "Acabou"}
+              </div>
+              <div class="pm">
+                <button onclick="changeQty(${item.id}, -1)">−</button>
+                <button onclick="changeQty(${item.id}, 1)">+</button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-
-      <div class="sensors">
-        <article class="sensor">
-          <div class="sensor-top">
-            <span class="sensor-icon">
-              <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13"/><path d="M8 6l1.5-2h5L16 6"/><circle cx="12" cy="12.5" r="3.5"/></svg>
-            </span>
-            <span class="sensor-code">CAM-01</span>
-          </div>
-          <div class="sensor-name">Visão / Câmera</div>
-          <div class="sensor-state" id="cameraState">PRONTA</div>
-        </article>
-        <article class="sensor">
-          <div class="sensor-top">
-            <span class="sensor-icon">
-              <svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M6 19l2-11h8l2 11"/><path d="M9 8a3 3 0 0 1 6 0"/><path d="M12 8v3"/></svg>
-            </span>
-            <span class="sensor-code">WGT-04</span>
-          </div>
-          <div class="sensor-name">Célula de carga</div>
-          <div class="sensor-state" id="weightState">ESTÁVEL</div>
-        </article>
-        <article class="sensor">
-          <div class="sensor-top">
-            <span class="sensor-icon">
-              <svg viewBox="0 0 24 24"><path d="M5 3h12v18H5z"/><path d="M17 5h2v14h-2"/><path d="M13 12h1"/></svg>
-            </span>
-            <span class="sensor-code">DOR-01</span>
-          </div>
-          <div class="sensor-name">Porta magnética</div>
-          <div class="sensor-state" id="doorState">FECHADA</div>
-        </article>
-      </div>
-
-      <div class="log" id="eventLog"></div>
-      <div class="voice-help">COMANDOS: “adicionar leite à lista” · “remover leite da lista” · “consumir um leite” · “tem três ovos” · “escanear geladeira”</div>
-    </section>
-
-    <aside class="receipt">
-      <div class="receipt-head">
-        <div class="receipt-kicker">KitchenCore / auto procurement</div>
-        <div class="receipt-title">Lista de Compras</div>
-        <div class="receipt-meta" id="receiptDate">--/--/---- · sessão local</div>
-      </div>
-      <div class="receipt-tools">
-        <button class="btn tiny" id="clearCheckedBtn">Remover marcados</button>
-        <button class="btn tiny" id="clearListBtn">Limpar tudo</button>
-      </div>
-      <div class="receipt-list" id="shoppingList"></div>
-    </aside>
-  </div>
-</div>
-
-<div class="voicebar" id="voicebar">
-  <button class="mic" id="micBtn" aria-label="Ativar reconhecimento de voz">
-    <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><path d="M12 17v4"/><path d="M9 21h6"/></svg>
-  </button>
-  <div class="wave" aria-hidden="true">
-    <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
-  </div>
-  <div class="voice-copy">
-    <div class="voice-label" id="voiceLabel">Voz / standby</div>
-    <div class="voice-text" id="voiceText">Clique no microfone ou digite um comando.</div>
-  </div>
-  <div class="command">
-    <input id="manualCommand" autocomplete="off" placeholder="digite um comando...">
-    <button class="btn dark" id="sendCommand">Executar</button>
-  </div>
-</div>
-
-<script>
-const ICONS = {
-  carton:`<svg viewBox="0 0 24 24"><path d="M7 3h8l3 4v14H6V7z"/><path d="M7 3l3 4h8"/><path d="M10 7v14"/></svg>`,
-  eggs:`<svg viewBox="0 0 24 24"><path d="M5 10h14l-1 10H6z"/><path d="M7 10c0-4 1-6 3-6s2 2 2 6"/><path d="M12 10c0-4 1-6 3-6s2 2 2 6"/></svg>`,
-  block:`<svg viewBox="0 0 24 24"><path d="M4 9l8-5 8 5v10H4z"/><path d="M4 9h16"/><path d="M8 13h2M14 15h2"/></svg>`,
-  produce:`<svg viewBox="0 0 24 24"><path d="M5 9h14l-1 11H6z"/><path d="M8 9c0-2 1-4 4-4s4 2 4 4"/><path d="M9 13h6"/></svg>`,
-  bottle:`<svg viewBox="0 0 24 24"><path d="M9 3h6v4l2 3v11H7V10l2-3z"/><path d="M9 6h6"/><path d="M8 13h8"/></svg>`,
-  jar:`<svg viewBox="0 0 24 24"><path d="M7 7h10l1 3v10H6V10z"/><path d="M7 4h10v3H7z"/><path d="M9 13h6"/></svg>`,
-  can:`<svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="6" ry="2"/><path d="M6 5v14c0 1.1 2.7 2 6 2s6-.9 6-2V5"/><path d="M6 19c0-1.1 2.7-2 6-2s6 .9 6 2"/></svg>`
-};
-
-const defaults = [
-  {id:1,name:"Leite",type:"Líquidos",icon:"carton",qty:2,usual:2,min:1,unit:"un",unitWeight:1000},
-  {id:2,name:"Ovos",type:"Proteína",icon:"eggs",qty:4,usual:12,min:4,unit:"un",unitWeight:60},
-  {id:3,name:"Queijo",type:"Laticínios",icon:"block",qty:2,usual:2,min:1,unit:"un",unitWeight:350},
-  {id:4,name:"Maçã",type:"Hortifruti",icon:"produce",qty:6,usual:6,min:2,unit:"un",unitWeight:155},
-  {id:5,name:"Iogurte",type:"Laticínios",icon:"jar",qty:0,usual:4,min:1,unit:"un",unitWeight:170},
-  {id:6,name:"Manteiga",type:"Laticínios",icon:"block",qty:0,usual:1,min:1,unit:"un",unitWeight:200},
-  {id:7,name:"Refrigerante",type:"Bebidas",icon:"bottle",qty:3,usual:4,min:1,unit:"un",unitWeight:600},
-  {id:8,name:"Tomate",type:"Hortifruti",icon:"produce",qty:2,usual:5,min:2,unit:"un",unitWeight:120}
-];
-
-let products = JSON.parse(localStorage.getItem("kc_products") || "null") || structuredClone(defaults);
-let shopping = JSON.parse(localStorage.getItem("kc_shopping") || "null") || [];
-let logs = [];
-
-const $ = s => document.querySelector(s);
-const pad2 = n => String(n).padStart(2,"0");
-
-function nowTime(){
-  return new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-}
-function save(){
-  localStorage.setItem("kc_products",JSON.stringify(products));
-  localStorage.setItem("kc_shopping",JSON.stringify(shopping));
-}
-function normalizeText(text){
-  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/[.,!?]/g," ").replace(/\s+/g," ").trim();
-}
-function statusOf(p){
-  if(p.qty<=0) return {rank:0,key:"critical",label:"ACABOU"};
-  if(p.qty<=p.min) return {rank:1,key:"warning",label:"ACABANDO"};
-  return {rank:2,key:"good",label:"SUFICIENTE"};
-}
-function levelOf(p){
-  if(p.usual<=0) return 0;
-  return Math.max(0,Math.min(100,Math.round((p.qty/p.usual)*100)));
-}
-function weightOf(p){
-  const grams = p.qty*p.unitWeight;
-  if(grams>=1000){
-    const kg = grams/1000;
-    return `${Number.isInteger(kg)?kg:kg.toFixed(2)}kg`;
-  }
-  return `${grams}g`;
-}
-function sensorNoiseWeight(p){
-  if(p.qty===0) return "0g";
-  const grams = p.qty*p.unitWeight;
-  const jitter = Math.round((Math.sin(p.id*1.7 + p.qty)*0.012)*grams);
-  const v = Math.max(0,grams+jitter);
-  if(v>=1000) return `${(v/1000).toFixed(v%1000===0?0:2)}kg`;
-  return `${v}g`;
-}
-function addShopping(name,source="manual"){
-  const exists = shopping.some(i=>normalizeText(i.name)===normalizeText(name));
-  if(!exists){
-    shopping.unshift({id:Date.now()+Math.random(),name,source,checked:false});
-    addLog(`LISTA + ${name.toUpperCase()} / ${source}`);
-  }
-}
-function autoProcure(){
-  products.forEach(p=>{
-    if(p.qty<=p.min) addShopping(p.name,p.qty<=0?"AUTO · ESGOTADO":"AUTO · BAIXO");
-  });
-}
-function segments(percent,key){
-  const filled = Math.max(0,Math.min(6,Math.ceil(percent/16.67)));
-  return Array.from({length:6},(_,i)=>`<span class="level-block ${i<filled?`filled ${key}`:""}"></span>`).join("");
-}
-function renderInventory(){
-  const sorted=[...products].sort((a,b)=>{
-    const sa=statusOf(a), sb=statusOf(b);
-    return sa.rank-sb.rank || a.name.localeCompare(b.name);
-  });
-  $("#inventory").innerHTML=sorted.map(p=>{
-    const s=statusOf(p), percent=levelOf(p);
-    const inList=shopping.some(i=>normalizeText(i.name)===normalizeText(p.name) && !i.checked);
-    return `<article class="stock-card ${s.key}">
-      <div class="stock-head">
-        <div class="food-icon">${ICONS[p.icon]||ICONS.can}</div>
-        <div>
-          <div class="food-name">${p.name}</div>
-          <div class="food-type">${p.type}</div>
-        </div>
-        <div class="status-chip ${s.key}">${s.label}</div>
-      </div>
-      <div class="stock-body">
-        <div>
-          <div class="data-label">Quantidade</div>
-          <div class="quantity">${pad2(p.qty)} <small>${p.unit}</small></div>
-          <div class="level-blocks">${segments(percent,s.key)}</div>
-          <div class="percent-text">[NÍVEL] ${pad2(percent)}%</div>
-        </div>
-        <div>
-          <div class="data-label">Leitura peso</div>
-          <div class="sensor-number">${sensorNoiseWeight(p)}</div>
-          <div class="data-label" style="margin-top:16px">Referência</div>
-          <div class="sensor-number">${weightOf({...p,qty:p.usual})}</div>
-        </div>
-      </div>
-      <div class="stock-foot">
-        <div class="threshold">MIN ${pad2(p.min)} ${p.unit} · IDEAL ${pad2(p.usual)} ${p.unit}</div>
-        <div class="adjust">
-          <button class="btn tiny ${inList?"active-list":""}" onclick="toggleListProduct(${p.id})">${inList?"✓ LISTA":"+ LISTA"}</button>
-          <button class="btn tiny" onclick="changeQty(${p.id},-1)">−</button>
-          <button class="btn tiny" onclick="changeQty(${p.id},1)">+</button>
-        </div>
-      </div>
-    </article>`;
-  }).join("");
-}
-function renderShopping(){
-  const list=$("#shoppingList");
-  if(!shopping.length){
-    list.innerHTML=`<div class="empty-receipt">Nenhum item pendente.<br>Itens críticos entram automaticamente.</div>`;
-  }else{
-    list.innerHTML=shopping.map(i=>`<div class="receipt-row">
-      <input class="check" type="checkbox" ${i.checked?"checked":""} onchange="toggleChecked('${i.id}')">
-      <div>
-        <div class="receipt-item" style="${i.checked?"text-decoration:line-through;opacity:.45":""}">${i.name}</div>
-        <div class="receipt-source">${i.source}</div>
-      </div>
-      <button class="xbtn" onclick="removeShopping('${i.id}')" aria-label="Remover">×</button>
-    </div>`).join("");
-  }
-}
-function renderStats(){
-  $("#statDetected").textContent=pad2(products.filter(p=>p.qty>0).length);
-  $("#statCritical").textContent=pad2(products.filter(p=>p.qty<=0).length);
-  $("#statWarning").textContent=pad2(products.filter(p=>p.qty>0&&p.qty<=p.min).length);
-  $("#statList").textContent=pad2(shopping.filter(i=>!i.checked).length);
-}
-function render(){
-  autoProcure();
-  renderInventory();
-  renderShopping();
-  renderStats();
-  $("#lastRead").textContent=nowTime();
-  save();
-}
-function addLog(text){
-  logs.unshift(`[${nowTime()}] ${text}`);
-  logs=logs.slice(0,10);
-  $("#eventLog").innerHTML=logs.map(l=>`<div class="log-line">${l}</div>`).join("");
-}
-function openDoor(){
-  $("#doorState").textContent="ABERTA";
-  setTimeout(()=>$("#doorState").textContent="FECHADA",900);
-}
-function voiceFeedback(text,isActive=false){
-  $("#voiceText").textContent=text;
-  $("#voiceLabel").textContent=isActive?"VOZ / ESCUTANDO":"VOZ / SISTEMA";
-  $("#voicebar").classList.toggle("listening",isActive);
-  $("#micBtn").classList.toggle("listening",isActive);
-}
-window.changeQty=function(id,delta){
-  const p=products.find(x=>x.id===id);
-  if(!p)return;
-  p.qty=Math.max(0,p.qty+delta);
-  openDoor();
-  $("#weightState").textContent=delta<0?"VARIAÇÃO −":"VARIAÇÃO +";
-  setTimeout(()=>$("#weightState").textContent="ESTÁVEL",900);
-  addLog(`WGT-04 / ${p.name.toUpperCase()} = ${p.qty} ${p.unit}`);
-  render();
-}
-window.toggleListProduct=function(id){
-  const p=products.find(x=>x.id===id);
-  const idx=shopping.findIndex(i=>normalizeText(i.name)===normalizeText(p.name));
-  if(idx>=0){
-    shopping.splice(idx,1);
-    addLog(`LISTA − ${p.name.toUpperCase()}`);
-  }else addShopping(p.name,"MANUAL · PAINEL");
-  render();
-}
-window.toggleChecked=function(id){
-  const item=shopping.find(i=>String(i.id)===String(id));
-  if(item)item.checked=!item.checked;
-  render();
-}
-window.removeShopping=function(id){
-  shopping=shopping.filter(i=>String(i.id)!==String(id));
-  render();
-}
-function simulateConsumption(){
-  const available=products.filter(p=>p.qty>0);
-  if(!available.length)return;
-  const p=available[Math.floor(Math.random()*available.length)];
-  p.qty=Math.max(0,p.qty-1);
-  openDoor();
-  $("#weightState").textContent="QUEDA DETECTADA";
-  addLog(`CONSUMO / ${p.name.toUpperCase()} −1 ${p.unit}`);
-  voiceFeedback(`[SENSOR]: ${p.name} atualizado para ${p.qty} ${p.unit}.`);
-  setTimeout(()=>$("#weightState").textContent="ESTÁVEL",1000);
-  render();
-}
-function simulateRestock(){
-  const p=products[Math.floor(Math.random()*products.length)];
-  const add=Math.max(1,p.usual-p.qty);
-  p.qty+=add;
-  openDoor();
-  $("#weightState").textContent="CARGA DETECTADA";
-  addLog(`REPOSIÇÃO / ${p.name.toUpperCase()} +${add} ${p.unit}`);
-  voiceFeedback(`[SENSOR]: reposição de ${p.name} registrada.`);
-  setTimeout(()=>$("#weightState").textContent="ESTÁVEL",1000);
-  render();
-}
-function scan(){
-  const bar=$("#scanProgress");
-  $("#cameraState").textContent="ESCANEANDO";
-  addLog("CAM-01 / VARREDURA INICIADA");
-  let v=0;
-  const timer=setInterval(()=>{
-    v=Math.min(100,v+10+Math.random()*15);
-    bar.style.width=v+"%";
-    if(v>=100){
-      clearInterval(timer);
-      setTimeout(()=>{
-        bar.style.width="0%";
-        $("#cameraState").textContent="LEITURA OK";
-        addLog("CAM-01 / INVENTÁRIO SINCRONIZADO");
-        voiceFeedback("[SISTEMA]: varredura concluída. Inventário atualizado.");
-        render();
-      },220);
+        `;
+      }).join("");
     }
-  },110);
-}
-function resetSystem(){
-  products=structuredClone(defaults);
-  shopping=[];
-  localStorage.removeItem("kc_products");
-  localStorage.removeItem("kc_shopping");
-  addLog("SYSTEM / BASE REINICIALIZADA");
-  voiceFeedback("[SISTEMA]: inventário restaurado para o cenário inicial.");
-  render();
-}
 
-const numberWords={zero:0,um:1,uma:1,dois:2,duas:2,tres:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12};
-function parseNumberToken(t){return /^\d+$/.test(t)?Number(t):(numberWords[t]??null)}
-function findProduct(text){
-  const t=normalizeText(text);
-  return products.find(p=>{
-    const n=normalizeText(p.name), singular=n.endsWith("s")?n.slice(0,-1):n;
-    return t.includes(n)||t.includes(singular);
-  });
-}
-function extractQty(text){
-  for(const w of normalizeText(text).split(" ")){
-    const n=parseNumberToken(w);
-    if(n!==null)return n;
-  }
-  return null;
-}
-function executeCommand(raw){
-  const text=normalizeText(raw);
-  if(!text)return;
-  addLog(`VOICE / "${raw}"`);
-  if(text.includes("escanear")||text.includes("scanear")){
-    voiceFeedback(`[VOZ]: "${raw}"`);
-    scan();return;
-  }
-  if(text.includes("limpar")&&text.includes("lista")){
-    shopping=[];voiceFeedback(`[VOZ]: lista de compras limpa.`);render();return;
-  }
-  const p=findProduct(text);
-  if((text.includes("adicionar")||text.includes("colocar")||text.includes("comprar"))&&text.includes("lista")){
-    if(p){
-      addShopping(p.name,"VOZ · MANUAL");
-      voiceFeedback(`[VOZ]: "${p.name} adicionado à lista".`);
-      render();return;
+    function renderLastCommand(){
+      $("#lastCommandText").textContent = lastCommand.text;
+      $("#lastCommandTime").textContent = lastCommand.time;
+      $("#commandStatusPill").textContent = lastCommand.ok ? "Item adicionado" : "Atenção";
+      $("#commandStatusPill").style.background = lastCommand.ok ? "#E2F8EC" : "#FFF2D8";
+      $("#commandStatusPill").style.color = lastCommand.ok ? "#17935D" : "#C8820C";
+      $("#voiceMessage").textContent = "“" + lastCommand.text.replace(/^"|"$/g, "") + "”";
     }
-    let name=text.replace(/adicionar|colocar|comprar|na lista|a lista|lista de compras|para lista|pra lista/g,"").trim();
-    name=name.replace(/\b(de|do|da)\b/g,"").trim();
-    if(name){
-      name=name.charAt(0).toUpperCase()+name.slice(1);
-      addShopping(name,"VOZ · MANUAL");
-      voiceFeedback(`[VOZ]: "${name} adicionado à lista".`);
-      render();return;
-    }
-  }
-  if((text.includes("remover")||text.includes("tirar")||text.includes("excluir"))&&text.includes("lista")){
-    if(p)shopping=shopping.filter(i=>normalizeText(i.name)!==normalizeText(p.name));
-    else{
-      let name=text.replace(/remover|tirar|excluir|da lista|lista de compras|lista/g,"").trim();
-      shopping=shopping.filter(i=>!normalizeText(i.name).includes(name));
-    }
-    voiceFeedback(`[VOZ]: item removido da lista.`);
-    render();return;
-  }
-  if(p&&(text.includes("consumir")||text.includes("consumi")||text.includes("usar")||text.includes("retirar"))){
-    const qty=extractQty(text)??1;
-    p.qty=Math.max(0,p.qty-qty);
-    openDoor();
-    $("#weightState").textContent="QUEDA DETECTADA";
-    addLog(`VOICE CONSUMO / ${p.name.toUpperCase()} −${qty}`);
-    voiceFeedback(`[VOZ]: "${qty} ${p.unit} de ${p.name} consumido".`);
-    setTimeout(()=>$("#weightState").textContent="ESTÁVEL",900);
-    render();return;
-  }
-  if(p&&(text.includes("tem ")||text.startsWith("tenho ")||text.includes("quantidade"))){
-    const qty=extractQty(text);
-    if(qty!==null){
-      p.qty=qty;
-      voiceFeedback(`[VOZ]: "${p.name} definido como ${qty} ${p.unit}".`);
-      addLog(`VOICE SET / ${p.name.toUpperCase()} = ${qty}`);
-      render();return;
-    }
-  }
-  voiceFeedback(`[VOZ]: comando não reconhecido — "${raw}".`);
-}
 
-$("#scanBtn").addEventListener("click",scan);
-$("#consumeBtn").addEventListener("click",simulateConsumption);
-$("#restockBtn").addEventListener("click",simulateRestock);
-$("#resetBtn").addEventListener("click",resetSystem);
-$("#clearListBtn").addEventListener("click",()=>{shopping=[];render();});
-$("#clearCheckedBtn").addEventListener("click",()=>{shopping=shopping.filter(i=>!i.checked);render();});
-$("#sendCommand").addEventListener("click",()=>{
-  const input=$("#manualCommand");
-  executeCommand(input.value);input.value="";
-});
-$("#manualCommand").addEventListener("keydown",e=>{if(e.key==="Enter")$("#sendCommand").click();});
+    function goTo(screen, el = null){
+      document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+      document.getElementById("screen-" + screen).classList.add("active");
 
-const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
-let recognition=null;
-if(SpeechRecognition){
-  recognition=new SpeechRecognition();
-  recognition.lang="pt-BR";
-  recognition.interimResults=false;
-  recognition.continuous=false;
-  recognition.onstart=()=>voiceFeedback("Ouvindo... fale agora.",true);
-  recognition.onresult=e=>{
-    const text=e.results[0][0].transcript;
-    voiceFeedback(`[VOZ]: "${text}"`);
-    executeCommand(text);
-  };
-  recognition.onerror=e=>voiceFeedback(`[VOZ]: erro ${e.error}. Use o campo de comando manual.`);
-  recognition.onend=()=>{
-    $("#voicebar").classList.remove("listening");
-    $("#micBtn").classList.remove("listening");
-    if($("#voiceLabel").textContent==="VOZ / ESCUTANDO")$("#voiceLabel").textContent="VOZ / SISTEMA";
-  };
-}else{
-  voiceFeedback("Reconhecimento de voz indisponível. Use Chrome ou o comando manual.");
-}
-$("#micBtn").addEventListener("click",()=>{
-  if(!recognition)return;
-  try{recognition.start()}catch(e){}
-});
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      const nav = el || document.querySelector(`.nav-item[data-screen="${screen}"]`);
+      if(nav) nav.classList.add("active");
 
-$("#receiptDate").textContent=new Date().toLocaleDateString("pt-BR")+" · sessão local";
-render();
-addLog("SYSTEM / KITCHENCORE OS INICIALIZADO");
-</script>
+      if(screen === "compras"){
+        renderShopping();
+        renderAutoItems();
+        renderLastCommand();
+      }
+      if(screen === "estoque"){
+        renderInventory();
+      }
+    }
+
+    function changeQty(id, delta){
+      const item = items.find(i => i.id === id);
+      if(!item) return;
+      item.qty = Math.max(0, item.qty + delta);
+      saveState();
+      renderAll();
+    }
+
+    function toggleShop(id){
+      const item = shopping.find(i => i.id === id);
+      if(!item) return;
+      item.checked = !item.checked;
+      saveState();
+      renderShopping();
+    }
+
+    function removeShop(id){
+      shopping = shopping.filter(i => i.id !== id);
+      saveState();
+      renderShopping();
+    }
+
+    function forceAddToShopping(name){
+      if(!shopping.some(s => normalize(s.name) === normalize(name))){
+        const item = items.find(i => normalize(i.name) === normalize(name));
+        shopping.push({
+          id:"s" + Date.now() + Math.random(),
+          name,
+          qty: item?.shoppingQty || "1 unidade",
+          checked:false,
+          source:"manual"
+        });
+        saveState();
+      }
+      renderShopping();
+    }
+
+    function simulateConsumption(){
+      const available = items.filter(i => i.qty > 0);
+      if(!available.length) return;
+      const item = available[Math.floor(Math.random() * available.length)];
+      item.qty = Math.max(0, item.qty - 1);
+      lastCommand = { text:`Consumo detectado: ${item.name}`, time:"Agora mesmo", ok:true };
+      saveState();
+      renderAll();
+    }
+
+    function simulateRestock(){
+      const item = items[Math.floor(Math.random() * items.length)];
+      item.qty += 1;
+      lastCommand = { text:`Reposição detectada: ${item.name}`, time:"Agora mesmo", ok:true };
+      saveState();
+      renderAll();
+    }
+
+    function scanFridge(){
+      lastCommand = { text:"Varredura concluída. Inventário atualizado.", time:"Agora mesmo", ok:true };
+      renderLastCommand();
+      renderAll();
+    }
+
+    function addQuickItem(){
+      goTo("compras");
+      $("#manualCommand").focus();
+    }
+
+    function resetAll(){
+      items = structuredClone(defaults);
+      shopping = [
+        { id: "s1", name: "Leite", qty: "2 unidades", checked: false, source: "manual" },
+        { id: "s2", name: "Pão Integral", qty: "1 pacote", checked: false, source: "manual" },
+        { id: "s3", name: "Tomate", qty: "4 unidades", checked: false, source: "auto" }
+      ];
+      lastCommand = { text:"Sistema restaurado.", time:"Agora mesmo", ok:true };
+      saveState();
+      renderAll();
+    }
+
+    function parseNumber(text){
+      const words = normalize(text).split(" ");
+      const map = { um:1, uma:1, dois:2, duas:2, tres:3, quatro:4, cinco:5, seis:6, sete:7, oito:8, nove:9, dez:10, doze:12 };
+      for(const w of words){
+        if(/^\d+$/.test(w)) return Number(w);
+        if(map[w] != null) return map[w];
+      }
+      return null;
+    }
+
+    function findItemFromText(text){
+      const n = normalize(text);
+      return items.find(i => n.includes(normalize(i.name)) || n.includes(normalize(i.category).replace(/s$/, "")));
+    }
+
+    function executeCommand(raw){
+      const text = normalize(raw);
+      if(!text) return;
+      let ok = true;
+
+      if(text.includes("escanear")){
+        scanFridge();
+        lastCommand = { text: raw, time: "Agora mesmo", ok: true };
+        renderLastCommand();
+        return;
+      }
+
+      if(text.includes("adicionar") && text.includes("lista")){
+        const item = findItemFromText(raw);
+        if(item){
+          forceAddToShopping(item.name);
+          lastCommand = { text: raw, time: "Agora mesmo", ok: true };
+        }else{
+          let name = raw.replace(/adicionar|à lista|a lista|na lista|lista/gi, "").trim();
+          if(name){
+            shopping.push({
+              id:"s" + Date.now() + Math.random(),
+              name:name,
+              qty:"1 unidade",
+              checked:false,
+              source:"manual"
+            });
+            lastCommand = { text: raw, time: "Agora mesmo", ok: true };
+          }else{
+            lastCommand = { text: "Não consegui identificar o item.", time:"Agora mesmo", ok:false };
+          }
+        }
+        saveState();
+        renderAll();
+        return;
+      }
+
+      if((text.includes("remover") || text.includes("tirar")) && text.includes("lista")){
+        const item = findItemFromText(raw);
+        if(item){
+          shopping = shopping.filter(s => normalize(s.name) !== normalize(item.name));
+          lastCommand = { text: raw, time:"Agora mesmo", ok:true };
+        }else{
+          lastCommand = { text: "Item não encontrado na lista.", time:"Agora mesmo", ok:false };
+        }
+        saveState();
+        renderAll();
+        return;
+      }
+
+      if(text.includes("consumir") || text.includes("usar")){
+        const item = findItemFromText(raw);
+        if(item){
+          const qty = parseNumber(raw) || 1;
+          item.qty = Math.max(0, item.qty - qty);
+          lastCommand = { text: raw, time:"Agora mesmo", ok:true };
+        }else{
+          lastCommand = { text: "Não consegui identificar o produto.", time:"Agora mesmo", ok:false };
+        }
+        saveState();
+        renderAll();
+        return;
+      }
+
+      if(text.includes("tem ") || text.includes("tenho ")){
+        const item = findItemFromText(raw);
+        const qty = parseNumber(raw);
+        if(item && qty != null){
+          item.qty = qty;
+          lastCommand = { text: raw, time:"Agora mesmo", ok:true };
+        }else{
+          lastCommand = { text: "Comando não reconhecido.", time:"Agora mesmo", ok:false };
+        }
+        saveState();
+        renderAll();
+        return;
+      }
+
+      lastCommand = { text: "Comando não reconhecido.", time:"Agora mesmo", ok:false };
+      renderLastCommand();
+    }
+
+    function sendManualCommand(){
+      const input = $("#manualCommand");
+      executeCommand(input.value);
+      input.value = "";
+    }
+
+    $("#manualCommand").addEventListener("keydown", e => {
+      if(e.key === "Enter") sendManualCommand();
+    });
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    const micBtn = $("#micBtn");
+
+    if(SpeechRecognition){
+      recognition = new SpeechRecognition();
+      recognition.lang = "pt-BR";
+      recognition.interimResults = false;
+      recognition.continuous = false;
+
+      recognition.onstart = () => {
+        micBtn.classList.add("listening");
+        $("#voiceMessage").textContent = "“Estou ouvindo...”";
+      };
+
+      recognition.onresult = e => {
+        const text = e.results[0][0].transcript;
+        executeCommand(text);
+      };
+
+      recognition.onerror = () => {
+        micBtn.classList.remove("listening");
+        lastCommand = { text:"Falha no reconhecimento de voz.", time:"Agora mesmo", ok:false };
+        renderLastCommand();
+      };
+
+      recognition.onend = () => {
+        micBtn.classList.remove("listening");
+        renderLastCommand();
+      };
+
+      micBtn.addEventListener("click", () => {
+        try{ recognition.start(); } catch(e){}
+      });
+    } else {
+      micBtn.addEventListener("click", () => {
+        lastCommand = { text:"Voz indisponível neste navegador.", time:"Agora mesmo", ok:false };
+        renderLastCommand();
+      });
+    }
+
+    function renderAll(){
+      addAutoItems();
+      renderHome();
+      renderInventory();
+      renderShopping();
+      renderAutoItems();
+      renderLastCommand();
+      saveState();
+    }
+
+    renderAll();
+    goTo("home");
+  </script>
 </body>
 </html>
